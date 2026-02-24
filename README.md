@@ -26,7 +26,7 @@ A modern, full-stack chat interface for interacting with your local LM Studio AI
 - **npm** or **pnpm**
 - **LM Studio** running locally with an API token
   - Download: https://lmstudio.ai/
-  - Must be running on `http://localhost:2301`
+  - Must be running on `http://localhost:xxxx`
 
 ## Setup Instructions
 
@@ -49,7 +49,7 @@ cp .env.local.example .env.local
 Edit `.env.local` and replace the token:
 
 ```env
-LM_STUDIO_URL=http://localhost:2301/v1
+LM_STUDIO_URL=http://localhost:xxxx/v1
 LM_STUDIO_TOKEN=your_actual_token_here
 ```
 
@@ -74,7 +74,7 @@ The application will be available at `http://localhost:3000`
 - Open LM Studio application
 - Load your preferred model
 - Start the local API server
-- Verify it's accessible at `http://localhost:2301/v1`
+- Verify it's accessible at `http://localhost:xxxx/v1`
 
 ## Project Structure
 
@@ -141,7 +141,7 @@ Send a message to the chat assistant.
 ### "LM Studio is offline" error
 - Ensure LM Studio application is running
 - Check that the API server is started
-- Verify the URL is `http://localhost:2301`
+- Verify the URL is `http://localhost:xxxx`
 
 ### Messages not sending
 - Check that your message is not empty
