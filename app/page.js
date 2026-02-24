@@ -2,50 +2,55 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { Send, Loader2, AlertCircle, Plus, Menu } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
 
 const STORAGE_KEY = 'chat_conversations';
 
 export default function ChatPage() {
-  const [conversations, setConversations] = useState(() => {
-    if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      return stored ? JSON.parse(stored) : [{ id: '1', title: 'New Chat', messages: [] }];
-    }
-    return [{ id: '1', title: 'New Chat', messages: [] }];
-  });
+  const [conversations, setConversations] = useState([{ id: '1', title: 'New Chat', messages: [] }]);
   const [currentConvId, setCurrentConvId] = useState('1');
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [isDesktop, setIsDesktop] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return window.matchMedia('(min-width: 768px)').matches;
-    }
-    return false;
-  });
-  const [showSidebar, setShowSidebar] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return window.matchMedia('(min-width: 768px)').matches;
-    }
-    return false;
-  });
+  const [isDesktop, setIsDesktop] = useState(false);
+  const [showSidebar, setShowSidebar] = useState(false);
+  const [isHydrated, setIsHydrated] = useState(false);
   const messagesEndRef = useRef(null);
 
   const currentConv = conversations.find(conv => conv.id === currentConvId) || { messages: [] };
 
+  // Load from localStorage on client side only
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(conversations));
-  }, [conversations]);
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored) {
+      setConversations(JSON.parse(stored));
+    }
+    setIsHydrated(true);
+  }, []);
 
+  // Handle media query changes
   useEffect(() => {
+    if (!isHydrated) return;
+    
     const mediaQuery = window.matchMedia('(min-width: 768px)');
+    const isDesktopMatch = mediaQuery.matches;
+    setIsDesktop(isDesktopMatch);
+    setShowSidebar(isDesktopMatch);
+
     const handler = (e) => {
       setIsDesktop(e.matches);
       setShowSidebar(e.matches);
     };
     mediaQuery.addEventListener('change', handler);
     return () => mediaQuery.removeEventListener('change', handler);
-  }, []);
+  }, [isHydrated]);
+
+  // Save to localStorage whenever conversations change
+  useEffect(() => {
+    if (isHydrated) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(conversations));
+    }
+  }, [conversations, isHydrated]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -145,7 +150,7 @@ export default function ChatPage() {
         <div className="px-4">
           <h3 className="mb-2 text-sm font-semibold text-muted-foreground">History</h3>
           <ul className="space-y-1">
-            {conversations.map(conv => (
+            {isHydrated && conversations.map(conv => (
               <li key={conv.id}>
                 <button
                   onClick={() => selectConversation(conv.id)}
@@ -227,7 +232,13 @@ export default function ChatPage() {
                       : 'bg-card border border-border'
                     }`}
                 >
-                  <p className="break-words whitespace-pre-wrap">{msg.content}</p>
+                  {msg.role === 'user' ? (
+                    <p className="break-words whitespace-pre-wrap">{msg.content}</p>
+                  ) : (
+                    <div className="prose prose-invert max-w-none">
+                      <ReactMarkdown>{msg.content}</ReactMarkdown>
+                    </div>
+                  )}
                 </div>
                 {msg.role === 'user' && (
                   <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
